@@ -104,8 +104,8 @@ class EmotionPlayer:
             t_idle = time.time() - idle_start_time
             # Update arm and head joints with smooth sinusoidal idle offsets.
             for group, joints in [
-                ("l_arm", self.reachy.l_arm.joints),
-                ("r_arm", self.reachy.r_arm.joints),
+                # ("l_arm", self.reachy.l_arm.joints),
+                # ("r_arm", self.reachy.r_arm.joints),
                 ("head", self.reachy.head.joints),
             ]:
                 for name, joint in joints.items():
@@ -116,10 +116,10 @@ class EmotionPlayer:
             for gripper, params in gripper_params.items():
                 freq, phase = params
                 offset = idle_amplitude_gripper * np.sin(2 * np.pi * freq * t_idle + phase)
-                if gripper == "l_hand":
-                    self.reachy.l_arm.gripper.goal_position = idle_final_positions["l_hand"] + offset
-                else:
-                    self.reachy.r_arm.gripper.goal_position = idle_final_positions["r_hand"] + offset
+                # if gripper == "l_hand":
+                #     self.reachy.l_arm.gripper.goal_position = idle_final_positions["l_hand"] + offset
+                # else:
+                #     self.reachy.r_arm.gripper.goal_position = idle_final_positions["r_hand"] + offset
             # Update antennas.
             for antenna, params in antenna_params.items():
                 freq, phase = params
@@ -203,27 +203,27 @@ class EmotionPlayer:
             if first_duration > 0.0:
                 current_time = playback_offset
                 index = bisect.bisect_right(data["time"], current_time)
-                self.reachy.l_arm.goto(data["l_arm"][index], duration=first_duration, interpolation_mode="linear")
-                self.reachy.r_arm.goto(data["r_arm"][index], duration=first_duration, interpolation_mode="linear")
+                # self.reachy.l_arm.goto(data["l_arm"][index], duration=first_duration, interpolation_mode="linear")
+                # self.reachy.r_arm.goto(data["r_arm"][index], duration=first_duration, interpolation_mode="linear")
                 # self.reachy.l_arm.gripper.set_opening(data["l_hand"][index]) # we need a goto for gripper so it's continuous
                 # self.reachy.r_arm.gripper.set_opening(data["r_hand"][index])
                 self.reachy.head.goto(
                     data["head"][index], duration=first_duration, interpolation_mode="linear"
                 )  # not using wait=true because it backfires if unreachable
                 # Instead, we interpolate the antennas and grippers by hand during first_duration. This also provides the delay needed for the arms+head gotos.
-                l_gripper_goal = data["l_hand"][index]
-                r_gripper_goal = data["r_hand"][index]
+                # l_gripper_goal = data["l_hand"][index]
+                # r_gripper_goal = data["r_hand"][index]
                 l_antenna_goal = data["l_antenna"][index]
                 r_antenna_goal = data["r_antenna"][index]
-                l_gripper_pos = self.reachy.l_arm.gripper.present_position
-                r_gripper_pos = self.reachy.r_arm.gripper.present_position
+                # l_gripper_pos = self.reachy.l_arm.gripper.present_position
+                # r_gripper_pos = self.reachy.r_arm.gripper.present_position
                 l_antenna_pos = self.reachy.head.l_antenna.present_position
                 r_antenna_pos = self.reachy.head.r_antenna.present_position
                 t0 = time.time()
                 while time.time() - t0 < first_duration:
                     alpha = (time.time() - t0) / first_duration
-                    self.reachy.l_arm.gripper.goal_position = lerp(l_gripper_pos, l_gripper_goal, alpha)
-                    self.reachy.r_arm.gripper.goal_position = lerp(r_gripper_pos, r_gripper_goal, alpha)
+                    # self.reachy.l_arm.gripper.goal_position = lerp(l_gripper_pos, l_gripper_goal, alpha)
+                    # self.reachy.r_arm.gripper.goal_position = lerp(r_gripper_pos, r_gripper_goal, alpha)
                     self.reachy.head.l_antenna.goal_position = lerp(l_antenna_pos, l_antenna_goal, alpha)
                     self.reachy.head.r_antenna.goal_position = lerp(r_antenna_pos, r_antenna_goal, alpha)
                     self.reachy.send_goal_positions(check_positions=False)
@@ -255,15 +255,15 @@ class EmotionPlayer:
                 if current_time >= data["time"][-1]:
                     logging.debug("Reached end of recording; setting final positions.")
                     # Set final positions for each component:
-                    for joint, goal in zip(self.reachy.l_arm.joints.values(), data["l_arm"][-1]):
-                        joint.goal_position = goal
-                    for joint, goal in zip(self.reachy.r_arm.joints.values(), data["r_arm"][-1]):
-                        joint.goal_position = goal
+                    # for joint, goal in zip(self.reachy.l_arm.joints.values(), data["l_arm"][-1]):
+                    #     joint.goal_position = goal
+                    # for joint, goal in zip(self.reachy.r_arm.joints.values(), data["r_arm"][-1]):
+                    #     joint.goal_position = goal
                     for joint, goal in zip(self.reachy.head.joints.values(), data["head"][-1]):
                         joint.goal_position = goal
 
-                    self.reachy.l_arm.gripper.goal_position = data["l_hand"][-1]
-                    self.reachy.r_arm.gripper.goal_position = data["r_hand"][-1]
+                    # self.reachy.l_arm.gripper.goal_position = data["l_hand"][-1]
+                    # self.reachy.r_arm.gripper.goal_position = data["r_hand"][-1]
                     self.reachy.head.l_antenna.goal_position = data["l_antenna"][-1]
                     self.reachy.head.r_antenna.goal_position = data["r_antenna"][-1]
 
@@ -273,11 +273,11 @@ class EmotionPlayer:
 
                     # Capture the final positions as a reference.
                     idle_final_positions = {
-                        "l_arm": {name: joint.goal_position for name, joint in self.reachy.l_arm.joints.items()},
-                        "r_arm": {name: joint.goal_position for name, joint in self.reachy.r_arm.joints.items()},
+                        # "l_arm": {name: joint.goal_position for name, joint in self.reachy.l_arm.joints.items()},
+                        # "r_arm": {name: joint.goal_position for name, joint in self.reachy.r_arm.joints.items()},
                         "head": {name: joint.goal_position for name, joint in self.reachy.head.joints.items()},
-                        "l_hand": self.reachy.l_arm.gripper.goal_position,
-                        "r_hand": self.reachy.r_arm.gripper.goal_position,
+                        # "l_hand": self.reachy.l_arm.gripper.goal_position,
+                        # "r_hand": self.reachy.r_arm.gripper.goal_position,
                         "l_antenna": self.reachy.head.l_antenna.goal_position,
                         "r_antenna": self.reachy.head.r_antenna.goal_position,
                     }
@@ -287,8 +287,8 @@ class EmotionPlayer:
 
                     idle_params = {"l_arm": {}, "r_arm": {}, "head": {}}
                     for group, joints in [
-                        ("l_arm", self.reachy.l_arm.joints),
-                        ("r_arm", self.reachy.r_arm.joints),
+                        # ("l_arm", self.reachy.l_arm.joints),
+                        # ("r_arm", self.reachy.r_arm.joints),
                         ("head", self.reachy.head.joints),
                     ]:
                         for name in idle_final_positions[group]:
@@ -298,8 +298,8 @@ class EmotionPlayer:
 
                     # Also assign parameters for grippers and antennas.
                     gripper_params = {
-                        "l_hand": (np.random.uniform(0.1, 0.3), 0.0),
-                        "r_hand": (np.random.uniform(0.1, 0.3), 0.0),
+                        # "l_hand": (np.random.uniform(0.1, 0.3), 0.0),
+                        # "r_hand": (np.random.uniform(0.1, 0.3), 0.0),
                     }
                     antenna_params = {
                         "l_antenna": (np.random.uniform(0.1, 0.3), 0.0),
@@ -331,22 +331,22 @@ class EmotionPlayer:
                     alpha = (current_time - t_prev) / (t_next - t_prev)
 
                 # Interpolate positions for each joint in left arm, right arm, and head.
-                for joint, pos_prev, pos_next in zip(
-                    self.reachy.l_arm.joints.values(), data["l_arm"][idx_prev], data["l_arm"][idx_next]
-                ):
-                    joint.goal_position = lerp(pos_prev, pos_next, alpha)
-                for joint, pos_prev, pos_next in zip(
-                    self.reachy.r_arm.joints.values(), data["r_arm"][idx_prev], data["r_arm"][idx_next]
-                ):
-                    joint.goal_position = lerp(pos_prev, pos_next, alpha)
+                # for joint, pos_prev, pos_next in zip(
+                #     self.reachy.l_arm.joints.values(), data["l_arm"][idx_prev], data["l_arm"][idx_next]
+                # ):
+                #     joint.goal_position = lerp(pos_prev, pos_next, alpha)
+                # for joint, pos_prev, pos_next in zip(
+                #     self.reachy.r_arm.joints.values(), data["r_arm"][idx_prev], data["r_arm"][idx_next]
+                # ):
+                    # joint.goal_position = lerp(pos_prev, pos_next, alpha)
                 for joint, pos_prev, pos_next in zip(
                     self.reachy.head.joints.values(), data["head"][idx_prev], data["head"][idx_next]
                 ):
                     joint.goal_position = lerp(pos_prev, pos_next, alpha)
 
                 # Similarly interpolate for grippers and antennas.
-                self.reachy.l_arm.gripper.goal_position = lerp(data["l_hand"][idx_prev], data["l_hand"][idx_next], alpha)
-                self.reachy.r_arm.gripper.goal_position = lerp(data["r_hand"][idx_prev], data["r_hand"][idx_next], alpha)
+                # self.reachy.l_arm.gripper.goal_position = lerp(data["l_hand"][idx_prev], data["l_hand"][idx_next], alpha)
+                # self.reachy.r_arm.gripper.goal_position = lerp(data["r_hand"][idx_prev], data["r_hand"][idx_next], alpha)
                 self.reachy.head.l_antenna.goal_position = lerp(data["l_antenna"][idx_prev], data["l_antenna"][idx_next], alpha)
                 self.reachy.head.r_antenna.goal_position = lerp(data["r_antenna"][idx_prev], data["r_antenna"][idx_next], alpha)
 

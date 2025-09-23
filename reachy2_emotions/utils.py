@@ -56,7 +56,8 @@ def list_available_emotions(folder: str) -> list:
         if file.endswith(".json"):
             emotion = os.path.splitext(file)[0]
             emotions.append(emotion)
-    return sorted(emotions)
+    # Show only 4 emotions to avoid clutter
+    return sorted(emotions)[:10]  
 
 
 def get_last_recording(folder: str) -> str:
