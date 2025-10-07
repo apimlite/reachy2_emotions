@@ -12,7 +12,7 @@ echo "Waiting for Reachy2 to boot up..."
 sleep 20
 
 # activate venv
-source .venv/bin/activate
+source venv/bin/activate
 
 # start emotion server in background
 emotion-play --server &
