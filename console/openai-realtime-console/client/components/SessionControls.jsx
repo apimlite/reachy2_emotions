@@ -2,7 +2,7 @@ import { useState } from "react";
 import { CloudLightning, CloudOff, MessageSquare } from "react-feather";
 import Button from "./Button";
 
-function SessionStopped({ startSession, isAudioEnabled }) {
+function SessionStopped({ startSession }) {
   const [isActivating, setIsActivating] = useState(false);
 
   function handleStartSession() {
@@ -18,15 +18,14 @@ function SessionStopped({ startSession, isAudioEnabled }) {
         onClick={handleStartSession}
         className={isActivating ? "bg-gray-600" : "bg-red-600"}
         icon={<CloudLightning height={16} />}
-        title={!isAudioEnabled ? "text only mode" : ""}
       >
-        {isActivating ? "starting session..." : `start session${!isAudioEnabled ? " (text only)" : ""}`}
+        {isActivating ? "starting session..." : "start session"}
       </Button>
     </div>
   );
 }
 
-function SessionActive({ stopSession, sendTextMessage, isAudioEnabled }) {
+function SessionActive({ stopSession, sendTextMessage }) {
   const [message, setMessage] = useState("");
 
   function handleSendClientEvent() {
@@ -43,7 +42,7 @@ function SessionActive({ stopSession, sendTextMessage, isAudioEnabled }) {
           }
         }}
         type="text"
-        placeholder={isAudioEnabled ? "send a text message..." : "send a text message ..."}
+        placeholder="send a text message..."
         className="border border-gray-200 rounded-full p-4 flex-1"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
@@ -73,7 +72,6 @@ export default function SessionControls({
   sendTextMessage,
   serverEvents,
   isSessionActive,
-  isAudioEnabled,
 }) {
   return (
     <div className="flex gap-4 border-t-2 border-gray-200 h-full rounded-md">
@@ -83,13 +81,9 @@ export default function SessionControls({
           sendClientEvent={sendClientEvent}
           sendTextMessage={sendTextMessage}
           serverEvents={serverEvents}
-          isAudioEnabled={isAudioEnabled}
         />
       ) : (
-        <SessionStopped
-          startSession={startSession}
-          isAudioEnabled={isAudioEnabled}
-        />
+        <SessionStopped startSession={startSession} />
       )}
     </div>
   );

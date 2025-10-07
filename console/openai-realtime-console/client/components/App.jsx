@@ -10,7 +10,6 @@ export default function App() {
   const [dataChannel, setDataChannel] = useState(null);
   const [recordedChunks, setRecordedChunks] = useState([]);
   const [recordedAudioURL, setRecordedAudioURL] = useState(null);
-  const [isAudioEnabled] = useState(false); // Audio permanently disabled
   const peerConnection = useRef(null);
   const audioElement = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -24,36 +23,24 @@ export default function App() {
     // Create a peer connection
     const pc = new RTCPeerConnection();
 
-    // Set up to play remote audio from the model (only if audio is enabled)
-    if (isAudioEnabled) {
-      audioElement.current = document.createElement("audio");
-      audioElement.current.autoplay = true;
-      pc.ontrack = (e) => (audioElement.current.srcObject = e.streams[0]);
-    } else {
-      // For text-only mode, we still need to handle remote tracks but won't play them
-      pc.ontrack = (e) => {
-        console.log("Received remote track (audio disabled, not playing)");
-      };
-    }
+    // Set up to play remote audio from the model
+    audioElement.current = document.createElement("audio");
+    audioElement.current.autoplay = true;
+    pc.ontrack = (e) => (audioElement.current.srcObject = e.streams[0]);
 
-    // Always add an audio track for WebRTC compatibility, but only record when enabled
+    // Add local audio track for microphone input in the browser
     const ms = await navigator.mediaDevices.getUserMedia({ audio: true });
     pc.addTrack(ms.getTracks()[0]);
 
-    // Only set up recording if audio is enabled
-    if (isAudioEnabled) {
-      const recorder = new MediaRecorder(ms);
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          setRecordedChunks((prev) => [...prev, event.data]);
-        }
-      };
-      recorder.start();
-      mediaRecorderRef.current = recorder;
-    } else {
-      // Mute the audio track since we don't want to actually use audio
-      ms.getTracks()[0].enabled = false;
-    }
+    // Set up MediaRecorder to capture the mic audio
+    const recorder = new MediaRecorder(ms);
+    recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        setRecordedChunks((prev) => [...prev, event.data]);
+      }
+    };
+    recorder.start();
+    mediaRecorderRef.current = recorder;
 
     // Set up data channel for sending and receiving events
     const dc = pc.createDataChannel("oai-events");
@@ -102,14 +89,14 @@ export default function App() {
 
   // When the recorder stops, combine the chunks and create an audio URL
   useEffect(() => {
-    if (!isSessionActive && recordedChunks.length > 0 && isAudioEnabled) {
+    if (!isSessionActive && recordedChunks.length > 0) {
       const blob = new Blob(recordedChunks, { type: "audio/webm" });
       const url = URL.createObjectURL(blob);
       setRecordedAudioURL(url);
       console.log("Recorded audio URL:", url);
       // Optionally, you could create a download link or audio player in your UI here.
     }
-  }, [isSessionActive, recordedChunks, isAudioEnabled]);
+  }, [isSessionActive, recordedChunks]);
 
   // Send a message to the model
   function sendClientEvent(message) {
@@ -195,7 +182,6 @@ export default function App() {
               sendTextMessage={sendTextMessage}
               events={events}
               isSessionActive={isSessionActive}
-              isAudioEnabled={isAudioEnabled}
             />
           </section>
         </section>
@@ -205,9 +191,8 @@ export default function App() {
             sendTextMessage={sendTextMessage}
             events={events}
             isSessionActive={isSessionActive}
-            isAudioEnabled={isAudioEnabled}
           />
-          {isAudioEnabled && recordedAudioURL && (
+          {recordedAudioURL && (
             <div>
               <h2>Recorded Audio</h2>
               <audio controls src={recordedAudioURL}></audio>

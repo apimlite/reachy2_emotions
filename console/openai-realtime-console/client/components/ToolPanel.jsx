@@ -188,7 +188,7 @@ async function callPythonPlayEmotion(payload) {
   }
 }
 
-export default function ToolPanel({ isSessionActive, sendClientEvent, events, isAudioEnabled }) {
+export default function ToolPanel({ isSessionActive, sendClientEvent, events }) {
   const [toolAdded, setToolAdded] = useState(false);
   const [emotionOutput, setEmotionOutput] = useState(null);
 
@@ -198,43 +198,6 @@ export default function ToolPanel({ isSessionActive, sendClientEvent, events, is
     // When the session is created, send the session update with our tool.
     const firstEvent = events[events.length - 1];
     if (!toolAdded && firstEvent.type === "session.created") {
-      const sessionUpdate = {
-        type: "session.update",
-        session: {
-          instructions: instructionsText,
-          temperature: 0.81,
-          modalities: isAudioEnabled ? ["text", "audio"] : ["text"],
-          tools: [
-            {
-              type: "function",
-              name: "play_emotion",
-              description:
-                "Call this function when you want to express an emotion. Provide the following parameters: input_text (what you heard), thought_process (your internal thought process), and emotion_name (the name of the movement to perform in lowercase snake_case without accents).",
-              parameters: {
-                type: "object",
-                strict: true,
-                properties: {
-                  input_text: {
-                    type: "string",
-                    description: "The input text (what you heard).",
-                  },
-                  thought_process: {
-                    type: "string",
-                    description: "Your internal thought process.",
-                  },
-                  emotion_name: {
-                    type: "string",
-                    description:
-                      "The name of the movement, has to be one of the predefined movements (see instructions).",
-                  },
-                },
-                required: ["input_text", "thought_process", "emotion_name"],
-              },
-            },
-          ],
-          tool_choice: "auto",
-        },
-      };
       sendClientEvent(sessionUpdate);
       setToolAdded(true);
       console.log("Session update sent:", sessionUpdate);
@@ -277,14 +240,7 @@ export default function ToolPanel({ isSessionActive, sendClientEvent, events, is
   return (
     <section className="h-full w-full flex flex-col gap-4">
       <div className="bg-gray-50 rounded-md p-4">
-        <h2 className="text-lg font-bold">
-          Emotion Panel
-          {!isAudioEnabled && (
-            <span className="ml-2 text-sm text-gray-600 font-normal">
-              (Text Only Mode)
-            </span>
-          )}
-        </h2>
+        <h2 className="text-lg font-bold">Emotion Panel</h2>
         {isSessionActive ? (
           emotionOutput ? (
             emotionOutput.error ? (
@@ -297,24 +253,51 @@ export default function ToolPanel({ isSessionActive, sendClientEvent, events, is
               <EmotionOutput output={emotionOutput} />
             )
           ) : (
-            <p>
-              {isAudioEnabled
-                ? "Speak to the assistant to express your emotions..."
-                : "Send text messages to the assistant to express emotions..."
-              }
-            </p>
+            <p>Speak to the assistant to express your emotions...</p>
           )
         ) : (
-          <p>
-            Start the session to use the emotion panel...
-            {!isAudioEnabled && (
-              <span className="block text-sm text-gray-600 mt-1">
-                (Text only mode - audio is disabled)
-              </span>
-            )}
-          </p>
+          <p>Start the session to use the emotion panel...</p>
         )}
       </div>
     </section>
   );
 }
+
+// --- Session update payload for tool registration ---
+const sessionUpdate = {
+  type: "session.update",
+  session: {
+    instructions: instructionsText,
+    temperature: 0.81,
+    modalities: ["text"],
+    tools: [
+      {
+        type: "function",
+        name: "play_emotion",
+        description:
+          "Call this function when you want to express an emotion. Provide the following parameters: input_text (what you heard), thought_process (your internal thought process), and emotion_name (the name of the movement to perform in lowercase snake_case without accents).",
+        parameters: {
+          type: "object",
+          strict: true,
+          properties: {
+            input_text: {
+              type: "string",
+              description: "The input text (what you heard).",
+            },
+            thought_process: {
+              type: "string",
+              description: "Your internal thought process.",
+            },
+            emotion_name: {
+              type: "string",
+              description:
+                "The name of the movement, has to be one of the predefined movements (see instructions).",
+            },
+          },
+          required: ["input_text", "thought_process", "emotion_name"],
+        },
+      },
+    ],
+    tool_choice: "auto",
+  },
+};
