@@ -1,0 +1,27 @@
+# Runtime for the Python emotion server
+FROM python:3.10-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# OS deps for sounddevice/soundfile
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+    libportaudio2 \
+    libsndfile1 \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy minimal project files
+COPY pyproject.toml /app/
+COPY reachy2_emotions /app/reachy2_emotions
+COPY data /app/data
+
+# Install package
+RUN pip install --no-cache-dir -e .
+
+EXPOSE 5001
+
+# Default: run Flask server talking to reachy2 simulator service
+CMD ["sh", "-c", "emotion-play --server --ip reachy2 --flask-port 5001"]

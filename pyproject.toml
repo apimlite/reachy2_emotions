@@ -2,13 +2,7 @@
 name = "reachy2_emotions"
 version = "0.1.0"
 description = "Reachy 2 Emotions package"
-readme = "README.md"
 requires-python = ">=3.8"
-license = { file = "LICENSE" }
-authors = [
-  { name = "Pollen Robotics", email = "contact@pollen-robotics.com" }
-]
-urls = { "Homepage" = "https://github.com/pollen-robotics/reachy2_emotions" }
 
 dependencies = [
   "numpy >=1.24.0, <=1.26.4",

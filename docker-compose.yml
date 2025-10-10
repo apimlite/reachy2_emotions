@@ -1,0 +1,57 @@
+services:
+  reachy2:
+    image: docker.io/pollenrobotics/reachy2
+    container_name: reachy2-emotions
+    platform: linux/amd64
+    ports:
+      - "8888:8888"   # Jupyter
+      - "6080:6080"   # noVNC
+      - "50051:50051" # gRPC
+      - "50065:50065" # optional
+    restart: unless-stopped
+
+  emotions:
+    build:
+      context: .
+      dockerfile: Dockerfile.emotions
+    image: reachy2-emotions:local
+    depends_on:
+      - reachy2
+    environment:
+      - REACHY_IP=reachy2-emotions
+    ports:
+      - "5001:5001"   # Flask API
+    volumes:
+      - ./data:/app/data:ro
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:5001\"); print(\"ok\")' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  console:
+    build:
+      context: ./console/openai-realtime-console
+      dockerfile: Dockerfile
+    image: reachy2-console:local
+    depends_on:
+      - emotions
+    env_file:
+      - .env
+    environment:
+      - PORT=3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./console/openai-realtime-console/session_logs:/usr/src/app/session_logs
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000 || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+networks:
+  default:
+    name: reachy2-net
