@@ -21,8 +21,4 @@ pip install -e .
 
 emotion-play --list
 
-cp .env console/openai-realtime-console/.env
-
-cd console/openai-realtime-console
-
 npm install

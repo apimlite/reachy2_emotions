@@ -22,7 +22,6 @@ echo "Emotion server started (PID: $EMOTION_PID)."
 sleep 5
 
 # start npm dev server in background
-cd console/openai-realtime-console
 npm run dev &
 NPM_PID=$!
 
